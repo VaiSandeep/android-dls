@@ -44,7 +44,10 @@ class ZSelectionItemCell : ConstraintLayout, View.OnClickListener {
             isVisible = model.isEditable
             setOnClickListener(this@ZSelectionItemCell)
         }
-
+        binding.container.apply {
+            isVisible = model.textRight.isValid()
+            setOnClickListener(this@ZSelectionItemCell)
+        }
         when {
             model.imageRes.getNullCheck() -> {
                 binding.imageType.setImageResource(model.imageRes!!)
@@ -54,6 +57,19 @@ class ZSelectionItemCell : ConstraintLayout, View.OnClickListener {
             }
             else -> {
                 binding.imageType.setImageDrawable(null)
+            }
+        }
+        binding.imageType.isVisible = model.imageRes.getNullCheck() || model.imageUrl.isValid()
+
+        when {
+            model.rightImageRes.getNullCheck() -> {
+                binding.rightImageType.setImageResource(model.rightImageRes!!)
+            }
+            model.rightImageUrl.isValid() -> {
+                binding.rightImageType.loadImage(model.rightImageUrl)
+            }
+            else -> {
+                binding.rightImageType.setImageDrawable(null)
             }
         }
 
@@ -82,6 +98,14 @@ class ZSelectionItemCell : ConstraintLayout, View.OnClickListener {
                     TextViewCompat.setTextAppearance(this, R.style.CaptionInactive)
                 }
             }
+            SelectionItemType.SECONDARY ->{
+                binding.textTitle.apply {
+                    TextViewCompat.setTextAppearance(this, R.style.Body1Primary)
+                }
+                binding.textDesc.apply {
+                    TextViewCompat.setTextAppearance(this, R.style.CaptionInactive)
+                }
+            }
         }
         binding.textTitle.apply {
             text = model.title
@@ -93,6 +117,10 @@ class ZSelectionItemCell : ConstraintLayout, View.OnClickListener {
             isVisible = model.desc.isValid()
             isSingleLine = model.isDescSingleLine
         }
+
+        binding.textRight.apply {
+            text = model.textRight
+        }
     }
 
     fun setListener(listener: IZSelectionItemListener) {
@@ -102,7 +130,8 @@ class ZSelectionItemCell : ConstraintLayout, View.OnClickListener {
     enum class SelectionItemType {
         DEFAULT,
         PRIMARY,
-        HIGHLIGHTED
+        HIGHLIGHTED,
+        SECONDARY
     }
 
     @Parcelize
@@ -115,24 +144,31 @@ class ZSelectionItemCell : ConstraintLayout, View.OnClickListener {
             var isEditable: Boolean = false,
             var type: SelectionItemType,
             var isHeaderSingleLine: Boolean = false,
-            var isDescSingleLine: Boolean = false
+            var isDescSingleLine: Boolean = false,
+            var textRight : String? = null,
+            var rightImageRes: Int? = null,
+            var rightImageUrl: String? = null,
     ): Parcelable
 
     override fun onClick(v: View?) {
         when(v?.id) {
             R.id.text_edit -> {
                 val id = binding.root.tag as String
-                listener?.onEditClick(id)
+                listener?.onRightActionClick(id)
             }
             R.id.layout_selection_item -> {
                 val id = binding.root.tag as String
                 listener?.onItemClick(id)
+            }
+            R.id.container -> {
+                val id = binding.root.tag as String
+                listener?.onRightActionClick(id)
             }
         }
     }
 
     interface IZSelectionItemListener {
         fun onItemClick(id: String)
-        fun onEditClick(id: String)
+        fun onRightActionClick(id: String)
     }
 }
